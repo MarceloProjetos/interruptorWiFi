@@ -7,6 +7,18 @@
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
+#include <PubSubClient.h>
+
+// Configuracoes do MQTT
+#define mqtt_server "192.168.0.95"
+#define mqtt_user "admin"
+#define mqtt_password "admin"
+
+#define board_topic "board/state"
+#define temperature_topic "sensor/temperature"
+
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 const char* ssid = "TECNEQUIP";
 const char* password = "Bauru2015";
@@ -139,6 +151,8 @@ void setup ( void ) {
   boardState.parallel.bits.isP1ON = 0;
   boardState.parallel.bits.isP2ON = 0;
   boardState.parallel.bits.isP3ON = 0;
+
+  client.setServer(mqtt_server, 1883);
 }
 
 void file_test_svg() {
@@ -169,11 +183,35 @@ void file_test_svg() {
   server.send ( 200, "image/svg+xml", out);
 }
 
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    // If you do not want to use a username and password, change next line to
+    // if (client.connect("ESP8266Client")) {
+    if (client.connect("ESP8266Client", mqtt_user, mqtt_password)) {
+      Serial.println("connected");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
+
 void loop ( void ) {
   static int initOK = 0;
   static struct strBoardState lastBoardState = boardState;
 
 	server.handleClient();
+
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
 
   boardState.parallel.bits.isP1ON = (digitalRead(botao1) != 0);   // turn the LED on (HIGH is the voltage level)
   boardState.parallel.bits.isP2ON = (digitalRead(botao2) != 0);   // turn the LED on (HIGH is the voltage level)
@@ -193,6 +231,10 @@ void loop ( void ) {
   }
 
   digitalWrite(led, boardState.isLedON);    // turn the LED off by making the voltage LOW
+
+  if( (boardState.isWebSwitchON != lastBoardState.isWebSwitchON) || (boardState.parallel.value != lastBoardState.parallel.value) ) {
+    client.publish(board_topic, "teste", true);
+  }
 
   lastBoardState = boardState;
 }
