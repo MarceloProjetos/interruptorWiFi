@@ -1,0 +1,27 @@
+Instruções - Como adicionar o index.html ao código
+==========================================================
+
+O arquivo index.html é a página principal do ESP8266.
+Esse arquivo não é incluído no código automaticamente.
+Quando ele for alterado, os passos a seguir devem ser executados:
+
+1) Minify
+
+- Acessar o site: http://www.willpeavy.com/minifier/
+- Colar TODO o conteúdo do arquivo no campo de texto e clicar em Minify
+- Copiar o texto gerado (CTRL + C)
+
+2) Substituir " por \"
+
+- Acessar o site: http://www.unit-conversion.info/texttools/replace-text/
+- Colar o resultado do passo anterior no campo de texto
+- Preencher os campos abaixo com " e \" respectivamente
+- Clicar em Process
+- Copiar o texto gerado (CTRL + C)
+
+3) Atualizando o código
+
+- Localizar a declaração da variável temp
+- Excluir a string carregada (Site antigo, apaga tudo até o final da linha)
+- Deve ser mantido apenas as aspas que delimitam a string e o ; do final: const char temp[] = "";
+- Colar o texto gerado no passo anterior entre as aspas
