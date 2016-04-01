@@ -1,7 +1,7 @@
-
-
+<!DOCTYPE HTML>
 <html>
    <head>
+      <title>POP-0</title>
       <style type='text/css'>
          .sensor {
              float: left;
@@ -178,7 +178,7 @@
 
          function boardProcess() {
              if (xmlHttp.readyState == 0 || xmlHttp.readyState == 4) {
-                 xmlHttp.open('PUT', 'xml', true);
+                 xmlHttp.open('PUT', 'json', true);
                  xmlHttp.onreadystatechange = handleServerResponse;
                  xmlHttp.send(null);
              }
@@ -188,25 +188,18 @@
          function handleServerResponse() {
              var color = ['white', 'yellow'];
              if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-                 xmlResponse = xmlHttp.responseXML;
+                 var jObject = JSON.parse(xmlHttp.responseText);
 
-                 xmldoc = xmlResponse.getElementsByTagName('boardIP');
-                 document.getElementById('boardIP').innerHTML = xmldoc[0].firstChild.nodeValue;
+                 document.getElementById('boardIP'     ).innerHTML  = jObject.board.ip;
+                 document.getElementById('boardNetwork').innerHTML  = jObject.board.network;
+                 document.getElementById('sala_circle' ).style.fill = color[jObject.led];
 
-                 xmldoc = xmlResponse.getElementsByTagName('boardNetwork');
-                 document.getElementById('boardNetwork').innerHTML = xmldoc[0].firstChild.nodeValue;
-
-                 xmldoc = xmlResponse.getElementsByTagName('led');
-                 document.getElementById("sala_circle").style.fill = color[xmldoc[0].firstChild.nodeValue];
-
-                 xmldoc = xmlResponse.getElementsByTagName('tmrON');
-                 var remaining = xmldoc[0].firstChild.nodeValue;
-                 if(remaining > 0) {
-                  var secs = (remaining%60);
+                 if(jObject.tmrON > 0) {
+                  var secs = (jObject.tmrON%60);
                   if(secs < 10) {
                      secs = "0" + secs;
                   }
-                  var textRemaining = Math.floor(remaining/60) + ":" + secs;
+                  var textRemaining = Math.floor(jObject.tmrON/60) + ":" + secs;
                   document.getElementById('remainingTimerON').innerHTML = textRemaining;
                   document.getElementById('showTimerON').style.display  = 'inline';
                   document.getElementById('setTimerON' ).style.display  = 'none';
@@ -217,14 +210,12 @@
                   document.getElementById('svgTimerON' ).style.fill     = 'black';
                  }
 
-                 xmldoc = xmlResponse.getElementsByTagName('tmrOFF');
-                 var remaining = xmldoc[0].firstChild.nodeValue;
-                 if(remaining > 0) {
-                  var secs = (remaining%60);
+                 if(jObject.tmrOFF > 0) {
+                  var secs = (jObject.tmrOFF%60);
                   if(secs < 10) {
                      secs = "0" + secs;
                   }
-                  var textRemaining = Math.floor(remaining/60) + ":" + secs;
+                  var textRemaining = Math.floor(jObject.tmrOFF/60) + ":" + secs;
                   document.getElementById('remainingTimerOFF').innerHTML = textRemaining;
                   document.getElementById('showTimerOFF').style.display  = 'inline';
                   document.getElementById('setTimerOFF' ).style.display  = 'none';
@@ -235,9 +226,8 @@
                   document.getElementById('svgTimerOFF' ).style.fill     = 'black';
                  }
 
-                 xmldoc = xmlResponse.getElementsByTagName('switch');
                  var botao = document.getElementById('sala');
-                 if (xmldoc[0].firstChild.nodeValue == 0) {
+                 if (jObject.switch == 0) {
                      botao.value = "OFF";
                      botao.className = "buttonOFF";
                  } else {
@@ -257,7 +247,6 @@
          <input id='sala' type="button" class="buttonON" value="ON" onclick="mudaBotao('sala')" style="vertical-align:top;"> 
          <svg height="66" width="66">
             <circle id="sala_circle" cx="33" cy="33" r="30" stroke="black" stroke-width="3" fill="yellow"/>
-            Seu browser nao suporta SVG. 
          </svg>
       </div>
       <div class='timer'>
