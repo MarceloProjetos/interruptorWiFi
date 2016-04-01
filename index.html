@@ -157,14 +157,7 @@
          }
 
          function mudaBotao(nome) {
-             var params;
-             var botao = document.getElementById(nome);
-             if (botao.value == "ON") {
-                 params = "led=0";
-             } else {
-                 params = "led=1";
-             }
-             boardSendData(params, null);
+             boardSendData("led=-1", null);
          }
 
          function createXmlHttpObject() {
@@ -227,7 +220,7 @@
                  }
 
                  var botao = document.getElementById('sala');
-                 if (jObject.switch == 0) {
+                 if (jObject.led != 0) {
                      botao.value = "OFF";
                      botao.className = "buttonOFF";
                  } else {
