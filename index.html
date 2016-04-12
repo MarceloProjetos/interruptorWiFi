@@ -194,7 +194,7 @@
 
          function setBoardNetwork() {
          	var ip = document.getElementById("IPMQTT").value;
-         	var mqttEnable = document.getElementById("USEMQTT").checked;
+         	var mqttEnable = document.getElementById("USEMQTT").checked ? 1 : 0;
             var ipOK = (mqttEnable != 0) ? ValidateIPaddress(ip) : true;
             if(ipOK) {
 	            var ssid = document.getElementById("redewifi");
@@ -205,13 +205,14 @@
 	            } else if(senha.value != senha2.value) {
 	            	alert("Senha incorreta!");
 	            } else {
-	            	var networkConfig = "";
-	            	networkConfig += "ssid="          + ssid.value;
-	            	networkConfig += "&password="     + senha.value;
-	            	networkConfig += "&mqttEnable="   + mqttEnable;
-	            	networkConfig += "&mqttIP="       + ip;
-	            	networkConfig += "&mqttUser="     + document.getElementById("USUARIOMQTT").value;
-	            	networkConfig += "&mqttPassword=" + document.getElementById("SENHAMQTT").value;
+	            	var networkConfig = "json={\\\"wifi\\\":{";
+	            	networkConfig += "\\\"ssid\\\":\\\""          + ssid.value;
+	            	networkConfig += "\\\",\\\"password\\\":\\\""     + senha.value;
+	            	networkConfig += "\\\"},\\\"mqtt\\\":{\\\"enable\\\":"   + mqttEnable;
+	            	networkConfig += ",\\\"ip\\\":\\\""       + ip;
+	            	networkConfig += "\\\",\\\"user\\\":\\\""     + document.getElementById("USUARIOMQTT").value;
+	            	networkConfig += "\\\",\\\"password\\\":\\\"" + document.getElementById("SENHAMQTT").value;
+	            	networkConfig += "\\\"}}";
 
 	    	         boardSendData(networkConfig, function() {
 	    	         								if (xmlHttp.readyState == 4) {
@@ -228,14 +229,14 @@
             var params;
             var txt = document.getElementById("timer" + tag);
             if(txt.value >= 0) {
-               params = tag + "=" + (txt.value * 60);
+               params = "json={\\\"" + tag + "\\\":" + (txt.value * 60) + "}";
                boardSendData(params, null);
             }
             txt.value = "0";
          }
 
          function mudaBotao(nome) {
-             boardSendData("led=-1", null);
+             boardSendData("json={\\\"led\\\":-1}", null);
          }      
 
          function createXmlHttpObject() {
@@ -350,7 +351,7 @@
    </div>
    <div class="sensor">  
          <h2><b>Configura&ccedil;&atilde;o do WI-FI</b></h2>    
-         <label>Rede Wi-FI:</label> <input type="text" id="redewifi" value="1234testando" maxlength="12" autocomplete="off" size='15'/>
+         <label>Rede Wi-FI:</label> <input type="text" id="redewifi" value="" maxlength="12" autocomplete="off" size='15'/>
          <br/>     
          <label>Senha:</label> <input type="password" id="senhawifi" value="" maxlength="12" autocomplete="off" size='15'/>     
          <br/>
