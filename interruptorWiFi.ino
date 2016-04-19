@@ -731,7 +731,7 @@ void loop ( void ) {
     updateTimer = true;
     lastms = currms;
     if (boardState.mqtt.enable && client.connected()) {
-      client.publish(boardStateTopic.c_str(), buildJSON().c_str(), true);
+      client.publish(boardStateTopic.c_str(), buildJSON().c_str());
     }
   }
 
