@@ -12,7 +12,6 @@
 #define mqtt_server "192.168.0.95"
 #define mqtt_user "admin"
 #define mqtt_password "admin"
-#define mqtt_timeout (60000)
 
 const uint32_t fileMagic = 0xA50F0001;
 
@@ -20,13 +19,16 @@ const uint32_t fileMagic = 0xA50F0001;
 #define board_commands_topic "board/commands"
 String boardStateTopic;
 
-#define wifi_timeout (15000)
 #define file_config_wifi "config_wifi.txt"
+
+#define mqtt_timeout  (60000)
+#define wifi_timeout  (15000)
+#define reset_timeout (10000)
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-#define DEFAULT_WIFI_SSID   "POP0_DEFAULT"
+#define DEFAULT_WIFI_SSID   "POP_DEFAULT"
 #define DEFAULT_WIFI_PASSWD ""
 
 String ssid     = DEFAULT_WIFI_SSID;
@@ -137,10 +139,6 @@ void boardReset(void)
     Serial.println(".");
     delay(500);
   }
-
-  //pinMode ( reset , OUTPUT );
-  //digitalWrite ( reset, 1 );
-
   ESP.restart();
 }
 
@@ -502,16 +500,36 @@ bool saveConfig(String *ssid, String *pass)
   return ret;
 } /* saveConfig*/
 
+void flashFormat(void)
+{
+  SPIFFS.format();
+
+  /* Inicializa a configuracao com valores default */
+  ssid     = DEFAULT_WIFI_SSID  ;
+  password = DEFAULT_WIFI_PASSWD;
+
+  boardState.name = "";
+
+  /* Carrega as configuracoes padrao do MQTT*/
+  boardState.mqtt.enable   = false;
+  boardState.mqtt.ip       = "";
+  boardState.mqtt.user     = "";
+  boardState.mqtt.password = "";
+  boardState.mqtt.topic    = "";
+
+  saveConfig(&ssid, &password);
+}
+
 void setup ( void ) {
   uint8_t MAC_array[6];
   char MAC_char[19] = "";
   int myID;
 
-  pinMode ( led, OUTPUT  );        /*led GPIO4 */
-  pinMode ( resetconfig , INPUT ); /*led GPIO16*/
-  pinMode ( botao1, INPUT_PULLUP );/*led GPIO13*/
-  pinMode ( botao2, INPUT_PULLUP );/*led GPIO12*/
-  pinMode ( botao3, INPUT_PULLUP );/*led GPIO14*/
+  pinMode ( led, OUTPUT  );                 /*led GPIO4 */
+  pinMode ( resetconfig , INPUT_PULLDOWN_16 ); /*led GPIO16*/
+  pinMode ( botao1, INPUT_PULLUP );         /*led GPIO13*/
+  pinMode ( botao2, INPUT_PULLUP );         /*led GPIO12*/
+  pinMode ( botao3, INPUT_PULLUP );         /*led GPIO14*/
   digitalWrite ( led, 0 );
 
   Serial.begin ( 115200 );
@@ -528,21 +546,10 @@ void setup ( void ) {
   } else {
     // Load wifi connection information.
     if (!loadConfig(&ssid, &password)) {
-      Serial.println("No WiFi connection information available.");
+      Serial.println("Load config from flash FAILED.");
 
       /* Se nao carregou a configuracao, formata a flash*/
-      SPIFFS.format();
-
-      /* Inicializa a configuracao com valores default */
-      ssid     = DEFAULT_WIFI_SSID  ;
-      password = DEFAULT_WIFI_PASSWD;
-
-      /* Carrega as configuracoes padrao do MQTT*/
-      boardState.mqtt.enable   = false;
-      boardState.mqtt.ip       = "";
-      boardState.mqtt.user     = "";
-      boardState.mqtt.password = "";
-      saveConfig(&ssid, &password);
+      flashFormat();
     }
     WiFi.macAddress(MAC_array);
     for (int i = 0; i < sizeof(MAC_array); ++i) {
@@ -570,7 +577,7 @@ void loopNetwork() {
   IPAddress myIP;
   static bool isFirstConnection = true, forceWiFiAP = false;
 
-  if (!boardState.isWiFiAP) {
+  if (boardState.isWiFiAP == false && forceWiFiAP == false) {
     static unsigned long timeout = 0;
 
     if (WiFi.status() == WL_CONNECTED) {
@@ -591,10 +598,12 @@ void loopNetwork() {
       }
     } else if(!timeout) {
       timeout = millis() + wifi_timeout;
+      WiFi.mode(WIFI_STA); /*aceita WIFI_AP / WIFI_AP_STA / WIFI_STA*/
       WiFi.begin ( ssid.c_str(), password.c_str() );
       Serial.println ( "Conectando a " + ssid  + " ..." );
     } else if(millis() > timeout) {
       forceWiFiAP = true;
+      WiFi.disconnect();
     }
   }
 
@@ -604,6 +613,8 @@ void loopNetwork() {
     if(forceWiFiAP) {
       uint8_t MAC_array[6];
       char MAC_char[7];
+
+      Serial.println("Forcando modo AP");
 
       ssidAP    = DEFAULT_WIFI_SSID;
       ssidAP   += "_";
@@ -717,7 +728,7 @@ void loop ( void ) {
   }
 
   unsigned long currms;
-  static unsigned long lastms = 0;
+  static unsigned long lastms = 0, timeoutReset = 0;
 
   server.handleClient();
 
@@ -733,6 +744,14 @@ void loop ( void ) {
     if (boardState.mqtt.enable && client.connected()) {
       client.publish(boardStateTopic.c_str(), buildJSON().c_str());
     }
+  }
+
+  // Rotina de RESET da Flash
+  if(!digitalRead(resetconfig)){
+    timeoutReset = currms + reset_timeout;
+  } else if(currms > timeoutReset) {
+    flashFormat();
+    boardReset();
   }
 
   /*Se passou 1 segundo os timers serao atualizados e, se houver atingido o valor programado, a saida sera configurada de acordo.*/
