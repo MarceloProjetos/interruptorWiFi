@@ -3,6 +3,9 @@
    <head>
       <title>POP-0</title>
       <style type="text/css">
+      	* {
+      		font-family: Arial;
+      	}
          .sensor {
              float: left;
              margin: 5px;
@@ -21,31 +24,27 @@
              margin: 5px;
              padding: 10px;
              width: 100px;
-             height: 145px;
+             height: 168px;
          }
 
          h1 {
              line-height: 0.1;
              text-align: justify;
              color: white;
-             font-family: Arial
          }
          h2 {
              line-height: 0.1;
              color: white;
              padding: 0px;
-   			 width: 40px;
-    		 text-align: justify;
+             font-weight: bold;
          }
          p {
              color: white;
-             font-family: Arial
          }
          body {
              padding: 0;
              margin: 0;
              background-color: #3FBFEF;
-             font-family: Arial
          }
          header {
              position: fixed;
@@ -114,13 +113,18 @@
              border: none;
              color: white;
              width: 100px;
-             text-align: center;
-             text-decoration: none;
-             display: inline-block;
              font-size: 20px;
              margin: 4px 2px;
              cursor: pointer;
-             border-radius: 12px;
+             border-radius: 10px;
+             box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+		 }
+		 .buttonConfigurar {
+             background-color: #e65c00;
+             border: none;
+             color: white;
+             cursor: pointer;
+             border-radius: 6px;
              box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 		 }
          .buttonSubmit:hover {
@@ -277,10 +281,11 @@
 		    right: 0px; 
 			background-color: #03FC0F; 
 		}
-      </style>
+</style>
       <script type="text/javascript">
       	 var updateConfig = true;
          var xmlHttp = createXmlHttpObject();
+         var escondeDiv = 1;
 
          function checkMQTT() {
              if (document.getElementById("USEMQTT").checked == false) {
@@ -464,11 +469,21 @@
                  }
              }
          }
+         function esconde_div(){
+         	if(escondeDiv==1){
+    		document.getElementById('config').style.display="block";
+    		document.getElementById('configura').value="Ocultar";
+    		escondeDiv = 0;
+    		} else{
+    			document.getElementById('config').style.display="none";
+    			document.getElementById('configura').value='Configurar';
+    			escondeDiv = 1;
+    		}
+		}
       </script>
    </head>
    <body onload='boardInit()'>
-      <br/>
-      <h2>&nbsp;Modelo&nbsp;<b>POP0-i1</b></h2>
+      <h1>&nbsp;Modelo<b>-i1</b></h1>
       <div class="sensor">
       <h1><b>Lampada</b></h1>
       <div>
@@ -493,9 +508,10 @@
          <div id='setTimerOFF'>Desligar em<br/> <input id='timeroff' type="text" name="led" value="" maxlength="4" size='9'/> <br/>minutos<br/> <input class="buttonSubmit" type="submit" value="Aplicar" onclick="boardSetTimer('off')" /></div>
          <div id='showTimerOFF' style="display:none">Desliga em<br/> <a id='remainingTimerOFF'></a> <br/>minutos<br/> <input class="buttonSubmit" type="submit" value="Cancelar" onclick="boardSetTimer('off')"/></div>
       </div>
+      <div><input class="buttonConfigurar" id="configura" type="submit" value="Configurar" onclick="esconde_div()" /></div> 
    </div>
-   <div class="sensor">  
-   		<label><h2> <b>Wi-FI:</b></h2> </label>
+   <div id='config' class="sensor" style="display:none">  
+   		<label><h2>Wi-FI:</h2> </label>
         <div class="onoffswitch">
 	        <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="apmode" checked>
 	        <label class="onoffswitch-label" for="apmode">
