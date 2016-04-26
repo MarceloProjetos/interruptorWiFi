@@ -227,16 +227,37 @@ void boardUpdate(char *json) {
   }
 }
 
-void printBoardState(void)
+void printIPCONFIG(void)
 {
+  uint8_t MAC_array[6];
+  char MAC_char[19] = "";
+  int myID = ESP.getChipId();
   IPAddress myIP;
   myIP = WiFi.localIP();
-  Serial.println("ssid: '" + ssid + "'");
+  
+  Serial.println("\nssid: '" + ssid + "'");
   Serial.println("psk:  '" + password + "'");
   Serial.println("name:  '" + boardState.name + "'");
   Serial.print ( "IP address: " );
   Serial.println ( myIP );
-  Serial.println((boardState.isWiFiAP) ? "Modo AP Ativado" : "Modo AP Desativado");
+  Serial.print ( "Chip ID: " );
+  Serial.println ( myID );
+    
+  WiFi.macAddress(MAC_array);
+    for (int i = 0; i < sizeof(MAC_array); ++i) {
+      sprintf(MAC_char, "%s%02x:", MAC_char, MAC_array[i]);
+    }
+    MAC_char[strlen(MAC_char) - 1] = 0;
+  Serial.print ( "MAC Adress: " );
+  Serial.println(MAC_char);
+  Serial.println((boardState.isWiFiAP) ? "Modo AP Ativado" : "Modo AP Desativado\n");
+}
+
+void printMQTTCONFIG(void)
+{
+  int myID = ESP.getChipId();
+  Serial.print ( "\nChip ID: " );
+  Serial.println ( myID );
   Serial.println((boardState.mqtt.enable) ? "MQTT Enabled" : "MQTT Disabled");
   Serial.println("MQTT IP    : '" + boardState.mqtt.ip       + "'");
   Serial.println("MQTT User  : '" + boardState.mqtt.user     + "'");
@@ -444,7 +465,8 @@ bool loadConfig(String *ssid, String *pass)
 #ifdef SERIAL_VERBOSE
   if (ret == true) {
     Serial.println("----- file content -----");
-    printBoardState();
+    printIPCONFIG();
+    printMQTTCONFIG();
   } else {
     Serial.println("Erro a ocarregar a configuracao da flash!");
   }
@@ -484,7 +506,8 @@ bool saveConfig(String *ssid, String *pass)
 #ifdef SERIAL_VERBOSE
   if (ret == true) {
     Serial.println("Novos dados salvos na flash:");
-    printBoardState();
+    printIPCONFIG();
+    printMQTTCONFIG();
   } else {
     Serial.println("Erro durante a gravacao na flash");
   }
@@ -518,10 +541,6 @@ void flashFormat(void)
 }
 
 void setup ( void ) {
-  uint8_t MAC_array[6];
-  char MAC_char[19] = "";
-  int myID;
-
   pinMode ( led, OUTPUT  );                 /*led GPIO4 */
   pinMode ( resetconfig , INPUT_PULLDOWN_16 ); /*led GPIO16*/
   pinMode ( botao1, INPUT_PULLUP );         /*led GPIO13*/
@@ -548,17 +567,7 @@ void setup ( void ) {
       /* Se nao carregou a configuracao, formata a flash*/
       flashFormat();
     }
-    WiFi.macAddress(MAC_array);
-    for (int i = 0; i < sizeof(MAC_array); ++i) {
-      sprintf(MAC_char, "%s%02x:", MAC_char, MAC_array[i]);
-    }
-    MAC_char[strlen(MAC_char) - 1] = 0;
-    Serial.print ( "MAC Adress: " );
-    Serial.println(MAC_char);
 
-    /* myID = ESP.getChipId();
-      Serial.print ( "Chip ID: " );
-      Serial.println ( myID );*/
   }
 
   if(boardState.mqtt.enable) {
@@ -710,8 +719,13 @@ void loop ( void ) {
       case '\n':
         if(cmdSize > 0) {
           cmdBuf[cmdSize] = 0;
-          if(!strcmp(cmdBuf, "PRINT STATE")) {
-            printBoardState();
+          if(!strcmp(cmdBuf, "IPCONFIG")) {
+            printIPCONFIG();
+          }
+          else if(!strcmp(cmdBuf, "MQTTCONFIG")) {
+            printMQTTCONFIG();
+          } 
+          else { Serial.println("OK");
           }
         }
         cmdSize = 0;
