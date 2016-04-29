@@ -251,7 +251,7 @@ void printIPCONFIG(void)
     MAC_char[strlen(MAC_char) - 1] = 0;
   Serial.print ( "MAC Adress: " );
   Serial.println(MAC_char);
-  Serial.println((boardState.isWiFiAP) ? "Modo AP Ativado" : "Modo STA ativado\n");
+  Serial.println((boardState.isWiFiAP) ? "Modo STA Ativado" : "Modo AP ativado\n");
 }
 
 void printMQTTCONFIG(void)

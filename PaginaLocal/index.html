@@ -3,20 +3,103 @@
 <head>
 	<meta charset="utf-8" />
 	<title>Iluminação</title>
-	<link rel="stylesheet" href="style.css">
-	<script type="text/javascript" src="js/jquery-2.2.3.min.js"></script>
-	<script type="text/javascript">
-		$(document).ready(function(){
-			$('#button').on('click', function(){
-				$(this).toggleClass('on');
-			});
-		});
-	</script>
+	<link href="style.css" rel="stylesheet">
 </head>
-<body>
-	<section>
-		<a href="#" id="button">&#xF011;</a>
-		<span></span>
+
+<body>s
+<div>
+    <h2>Seridor de fila MQTT</h2>
+    </div>
+      <div id="messages">
+    </div>
+    <form class="well form-search" id='send_form'>
+      <input class="input-medium" id='send_form_input' placeholder='Digite sua mensagem'/>
+      <button class="button" type="submit">Enviar</button>
+    </form>
+    <section>
+	<a href="#" id="button">&#xF011;</a>
+	<span></span>
 	</section>
+</div>
+
+<script type="text/javascript" src="js/jquery-2.2.3.min.js"></script>
+<script type="text/javascript" src="js/mqttws31.js">		</script>
+<script type="text/javascript">
+
+$(document).ready(function(){
+  
+	$('#button').on('click', function(){
+		$('button').toggleClass('on');
+      	message = new Messaging.Message("{\"led\":-1}");
+     	message.destinationName = "board/commands";
+    	client.send(message);
+	});
+
+ 	 if( !window.WebSocket) {
+ 	   $("#connect").html("\
+ 	       <h1>Não conectado!</h1>\
+ 	       <p>\
+ 	       Use WebKit ou FireFox ou Google Chrome. Ou servidor de fila não inicializado!\
+ 	       </p>\
+  	  ");
+	  } else {
+	    $(function() {  
+	      var clientId = "root-" + Math.floor(Math.random() * 10000);   
+	    
+	      client = new Messaging.Client("localhost", 61614, clientId);
+
+	      client.onConnect = onConnect;
+	  
+	      client.onMessageArrived = onMessageArrived;
+	      client.onConnectionLost = onConnectionLost;            
+
+	      client.connect({userName:"admin",password:"admin",onSuccess:onConnect,onFailure:onFailure}); 
+	      return false;
+	    });  
+
+    // the client is notified when it is connected to the server.
+    var onConnect = function(frame) {
+      alert("Conectado ao ACTVEMQ");
+      client.subscribe("board/commands");
+    };  
+
+    // this allows to display debug logs directly on the web page
+    var debug = function(str) {
+      alert(document.createTextNode(str + "\n"));
+    };  
+
+    $('#send_form').submit(function() {
+      var text = $('#send_form_input').val();
+      if (text) {
+        message = new Messaging.Message(text);
+        message.destinationName = "board/commands";
+        client.send(message);
+        $('#send_form_input').val("");
+      }
+      return false;
+    });
+
+    function onFailure(failure) {
+      alert("Falha ao conectar");
+      alert(failure.errorMessage);
+    }  
+
+    function onMessageArrived(message) {
+      var p = document.createElement("p");
+      var t = document.createTextNode(message.payloadString);
+      p.appendChild(t);
+      $("#messages").append(p);
+ 
+      if (message.payloadString=="{\"led\":-1}"){$('#button').toggleClass('on');}
+    }
+
+    function onConnectionLost(responseObject) {
+      if (responseObject.errorCode !== 0) {
+        alert(client.clientId + ": " + responseObject.errorCode + "\n");
+      }
+    }    
+  }
+});    
+	</script>
 </body>
 </html>
