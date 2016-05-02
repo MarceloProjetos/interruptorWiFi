@@ -6,20 +6,21 @@
 	<link href="style.css" rel="stylesheet">
 </head>
 
-<body>s
-<div>
-    <h2>Seridor de fila MQTT</h2>
-    </div>
-      <div id="messages">
-    </div>
+<body>
+<div id="messages">    </div>
+
     <form class="well form-search" id='send_form'>
-      <input class="input-medium" id='send_form_input' placeholder='Digite sua mensagem'/>
+      <input class="input-medium" id='send_form_input' placeholder='Mensagem para Servidor'/>
       <button class="button" type="submit">Enviar</button>
     </form>
     <section>
-	<a href="#" id="button">&#xF011;</a>
-	<span></span>
-	</section>
+      <a href="#" id="button"> &#xF011; </a>
+      <span></span>
+    </section>
+     <section>
+      <a href="#" id="button2"> &#xF011; </a>
+      <span></span>
+    </section>
 </div>
 
 <script type="text/javascript" src="js/jquery-2.2.3.min.js"></script>
@@ -27,10 +28,22 @@
 <script type="text/javascript">
 
 $(document).ready(function(){
-  
+  var text = "0";
+
 	$('#button').on('click', function(){
-		$('button').toggleClass('on');
-      	message = new Messaging.Message("{\"led\":-1}");
+      switch(text){
+        case "0":
+          $('#button').removeClass("on");
+          text = "1";
+          break;
+        case "1":
+          $('#button').addClass("on");
+          text = "0";
+          break;
+        default:
+            alert("nao sei " + text);
+      }
+      message = new Messaging.Message("{\"led\":-1}");
      	message.destinationName = "board/commands";
     	client.send(message);
 	});
@@ -59,14 +72,14 @@ $(document).ready(function(){
 
     // the client is notified when it is connected to the server.
     var onConnect = function(frame) {
-      alert("Conectado ao ACTVEMQ");
+      alert("Conectado ao sitema");
       client.subscribe("board/commands");
     };  
 
     // this allows to display debug logs directly on the web page
     var debug = function(str) {
       alert(document.createTextNode(str + "\n"));
-    };  
+    };
 
     $('#send_form').submit(function() {
       var text = $('#send_form_input').val();
@@ -87,10 +100,23 @@ $(document).ready(function(){
     function onMessageArrived(message) {
       var p = document.createElement("p");
       var t = document.createTextNode(message.payloadString);
-      p.appendChild(t);
-      $("#messages").append(p);
+     // p.appendChild(t);
+     // $("#messages").append(p);
  
-      if (message.payloadString=="{\"led\":-1}"){$('#button').toggleClass('on');}
+      switch(message.payloadString){
+        case "ON":
+          $('#button').addClass("on");
+          text = "0";
+          break;
+        case "OFF":
+          $('#button').removeClass("on");
+          text = "1";
+          break;
+        case "{\"led\":-1}":
+          break;
+        default:
+            alert("Nao sei o que significa " + message.payloadString);
+      } 
     }
 
     function onConnectionLost(responseObject) {

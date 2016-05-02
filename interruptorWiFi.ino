@@ -152,7 +152,7 @@ void boardUpdate(char *json) {
 
   // Test if parsing succeeds.
   if (!root.success()) {
-    Serial.println("parseObject() failed");
+    //Serial.println("parseObject() failed"); //Manda pela serial falha no parse Json
     return;
   }
 
