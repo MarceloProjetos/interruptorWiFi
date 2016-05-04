@@ -9,7 +9,6 @@
 #define SERIAL_VERBOSE
 
 /* Configuracoes do MQTT*/
-#define mqtt_server "192.168.0.95"
 #define mqtt_user "admin"
 #define mqtt_password "admin"
 
@@ -266,7 +265,7 @@ void printMQTTCONFIG(void)
   Serial.println("MQTT Topic : '" + boardState.mqtt.topic    + "'");
 
   if (client.connected() && WiFi.status() == WL_CONNECTED) {
-      Serial.println("Conectado a servidor MQTT " + boardState.mqtt.ip + "... ");
+      Serial.println("Conectado a servidor MQTT " + boardState.mqtt.ip + ".");
       } else {
           Serial.println("Não conectado a servidor MQTT.");
       }
@@ -577,6 +576,7 @@ void setup ( void ) {
 
   }
 
+
   if(boardState.mqtt.enable) {
     boardStateTopic = board_topic;
     if(boardState.mqtt.topic != "") {
@@ -604,7 +604,8 @@ void loopNetwork() {
         Serial.print ( "IP address: " );
         Serial.println ( myIP );
 
-        client.setServer(mqtt_server, 1883);
+
+        client.setServer(boardState.mqtt.ip.c_str(), 1883);  
         client.setCallback(mqttCallback);
 
         timeout = 0;
@@ -679,10 +680,10 @@ void loopMQTT() {
 
   if (!client.connected() && WiFi.status() == WL_CONNECTED) {
     if (!timeout) {
-      Serial.print("Attempting MQTT connection on " + boardState.mqtt.ip + "... ");
+      Serial.print("Tentando conectar com fila MQTT " + boardState.mqtt.ip + "... ");
       /* Tentando se conectar*/
       if (client.connect("ESP8266Client", mqtt_user, mqtt_password)) {
-        Serial.println("connected");
+        Serial.println("connectado");
         client.subscribe(board_commands_topic);
         if(boardState.mqtt.topic != "") {
           String boardTopic = board_commands_topic;

@@ -1,4 +1,47 @@
-Instruções - Como adicionar o index.html ao código
+======================================================================
+1- Instruções - Instalar o Software do Arduino com suporte ao ESP8266
+======================================================================
+
+1) Instalação da IDE
+
+- Acessar o site: http://www.arduino.cc/
+- Procure "Downloads" e baixe a versão "Windows Instaler"
+- Instale a versão completa no diretorio padrão. E responda "SIM" em Arduino USB Driver.
+
+2) Configurando a Interface
+
+- Abra o programa "Arduino", click em Arquivos/Preferencias.
+- No campo "URLs Adicionais de Gerenciadores de Placas" copie o link abaixo 
+  http://arduino.esp8266.com/stable/package_esp8266com_index.json
+  Caso o link mude procure ele em: https://github.com/esp8266/Arduino
+- Click em OK e depois vá para o menu Ferrementas/Placas -> Gerenciador de Placas
+- No final da lista de placas que apareceu, "esp8266 by ESP8266 Community" click em Instalar.
+- Após a instalação entre novamente em Ferrementas/Placas e mude de a configuração 
+  "Arduino/Genuino UNO" --> "Generic ESP8266 Module"
+- Para programar e testar a Serial deve estar em "115200" e "Ambos, NL e CR"
+
+3) Instalando bibliotecas do ESP8266
+
+- Abra o programa "Arduino", click em Sketch/Incluir Biblioteca --> Gerenciar Bibliotecas
+- Porcure e instale a seguintes Libs:
+	1-ArduinoJson by Benoit Blanchon <--Suporte a JSON
+	2-PubSubClient by Nick O'Leary <--Suporte MQTT
+
+==========================================
+2- Instruções - Instalar o Broker ActiveMQ
+==========================================
+
+- Acessar o site: http://activemq.apache.org/
+- Procure "Downloads" e baixe a versão "Windows Distribution"
+- Descompactar a pasta "apache-activemq-5.13.3" na pasta /Desenvolvimento
+- Pelo terminar de comando entre em "/Desenvolvimento/apache-activemq-5.13.3/bin"
+- Execute "activemq start" --> 	Se ocorrer um erro é provavel que esteja faltando o JAVA!
+				Para referencia a versao atual é a "Java SE Development Kit"
+- Abra um brower e conecte na porta 8161 "http://127.0.0.1:8161/admin/"
+- Senha:admin Login:admin
+
+==========================================================
+Instruções - Como adicionar o index.html ao código "C"
 ==========================================================
 
 O arquivo index.html é a página principal do ESP8266.
