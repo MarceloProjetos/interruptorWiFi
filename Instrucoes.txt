@@ -28,7 +28,7 @@
 	2-PubSubClient by Nick O'Leary <--Suporte MQTT
 
 ==========================================
-2- Instruções - Instalar o Broker ActiveMQ
+2- Instalação do Broker "ActiveMQ"
 ==========================================
 
 - Acessar o site: http://activemq.apache.org/
@@ -40,9 +40,25 @@
 - Abra um brower e conecte na porta 8161 "http://127.0.0.1:8161/admin/"
 - Senha:admin Login:admin
 
-==========================================================
-Instruções - Como adicionar o index.html ao código "C"
-==========================================================
+=======================
+3- Instação do node-red
+=======================
+- Acessar o site: https://nodejs.org/
+- Abaixe a ultima versão LTS, siga com a instalação padrão.
+  "A vezes tem que tentar instalar 2x para terminar com sucesso"
+- Após a instalação precisa configura o PATH
+	1- Painel de controle/Sistema e Segurança/Sistema e entre em Configuração avançada do sistema
+	2- Agora procure a aba "Avançado" e dentro o botão "Variaveis de Ambiente"
+	3- Em "Variaveis do Sistema" click em novo
+	4- "Nome da Variavel: PATH" e "Valor da variável:C:\Program File\nodejs" O caminho pode mudar!
+- Em um shell com permisão de Administrador rode o comando "npm install -g --unsafe-perm node-red"
+- Aguarde terminara a instalação...
+- Excute no prompt de comando "node-red"
+- Abra um brower e conecte na porta 1880 "http://127.0.0.1:1880/#"
+
+===============================================================
+Instruções - Como adicionar um arquivo index.html ao código "C"
+===============================================================
 
 O arquivo index.html é a página principal do ESP8266.
 Esse arquivo não é incluído no código automaticamente.
