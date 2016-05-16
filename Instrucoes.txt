@@ -52,14 +52,9 @@
 1) Instalação
 - Acessar o site: https://nodejs.org/
 - Abaixe a ultima versão LTS, siga com a instalação padrão.
-  "A vezes tem que tentar instalar 2x para terminar com sucesso"
-- Após a instalação precisa configura o PATH
-	1- Painel de controle/Sistema e Segurança/Sistema e entre em Configuração avançada do sistema
-	2- Agora procure a aba "Avançado" e dentro o botão "Variaveis de Ambiente"
-	3- Em "Variaveis do Sistema" click em novo
-	4- "Nome da Variavel: PATH" e "Valor da variável:C:\Program File\nodejs" O caminho pode mudar!
 - Em um shell com permisão de Administrador rode o comando "npm install -g --unsafe-perm node-red"
 - Aguarde terminara a instalação...
+- instalar https://desktop.github.com/ para o modulo modbustcp
 
 2) Testando
 - Excute no prompt de comando "node-red"
@@ -69,9 +64,7 @@
 - Entre pelo prompt no modo root em: "C:\Program Files\nodejs"
 - npm install -g node-red-contrib-bigtimer
 - npm install -g thethingbox-node-timestamp
-- npm install -g node-red-contrib-modbustcp
-- npm install -g node-red-contrib-modbus
-- npm install -g node-red-contrib-mqtt-dynamic
+- npm install -g https://github.com/altamira/node-red-contrib-modbustcp
 - npm install -g node-red-contrib-file-function
 - npm install -g node-red-contrib-schedex
 - npm install -g node-red-node-timeswitch

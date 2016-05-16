@@ -8,26 +8,26 @@
 
 #define SERIAL_VERBOSE
 
-/* Configuracoes do MQTT*/
+/* Configuracoes de user e´password do MQTT "http://127.0.0.1:8161" */
 #define mqtt_user "admin"
 #define mqtt_password "admin"
 
 const uint32_t fileMagic = 0xA50F0001;
 
-#define board_topic "board/state"
-#define board_commands_topic "board/commands"
+#define board_topic "board/state" 
+#define board_commands_topic "board/commands" /* Recebe aqui os comandos com {"led":0}*/
 String boardStateTopic;
 
 #define file_config_wifi "config_wifi.txt"
 
-#define mqtt_timeout  (60000)
-#define wifi_timeout  (15000)
-#define reset_timeout (10000)
+#define mqtt_timeout  (60000)  /*60s para tentar novamente conectar a fila mqtt*/
+#define wifi_timeout  (15000)  /*15s para tentar conectar a rede wifi antes de desistir*/
+#define reset_timeout (10000)  /*10s para resetar a placa apos gravar na flash*/
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-#define DEFAULT_WIFI_SSID   "POP_DEFAULT"
+#define DEFAULT_WIFI_SSID   "POP_DEFAULT" /* ssid default caso nao consiga conectar ao wifi programado
 #define DEFAULT_WIFI_PASSWD ""
 
 String ssid     = DEFAULT_WIFI_SSID;
@@ -37,7 +37,7 @@ const int led    =  4; /*led GPIO4*/
 const int botao1 = 13;
 const int botao2 = 12;
 const int botao3 = 14;
-const int resetconfig = 16;
+const int resetconfig = 16; /* Se este pino ficar em ON mais que 5s formata a flash*/
 
 bool saveConfig(String *ssid, String *pass);
 bool loadConfig(String *ssid, String *pass);
@@ -65,8 +65,8 @@ struct strLampState {
   int last_parallel; // Estado do ultimo valor para o paralelo
 
   /* Timers para ligar / desligar a lampada*/
-  int tmrON; // Tempo restante ate acionamento
-  int tmrOFF; // Tempo restante ate desligamento
+  int tmrON; /* Tempo restante ate acionamento*/
+  int tmrOFF; /* Tempo restante ate desligamento*/
 };
 
 struct strBoardState {
@@ -86,7 +86,7 @@ struct strBoardState {
   } mqtt;
 
   /* Estado das Lampadas */
-  struct strLampState lamp[2]; // A placa suporta 2 lampadas
+  struct strLampState lamp[2]; /* A placa suporta 2 lampadas*/
 } boardState;
 
 void lampInit(struct strLampState &lamp)
@@ -117,8 +117,8 @@ void lampUpdateOutput(struct strLampState &lamp, bool updateTimers)
     }
   }
 
-  // Se variaveis para forcar liga ou desliga estiverem ativadas, configura o estado da saida de acordo
-  // Se houve alteracao no estado do paralelo, inverte o estado da lampada.
+  /* Se variaveis para forcar liga ou desliga estiverem ativadas, configura o estado da saida de acordo*/
+  /* Se houve alteracao no estado do paralelo, inverte o estado da lampada.*/
   if (lamp.isForceON || reachedTimerON) {
     lamp.isON = 1;
   } else if (lamp.isForceOFF || reachedTimerOFF) {
@@ -130,11 +130,11 @@ void lampUpdateOutput(struct strLampState &lamp, bool updateTimers)
   lamp.last_parallel = lamp.parallel.value;
 }
 
-void boardReset(void)
+void boardReset(void) /*funcao de auto reset da placa*/
 {
   int i = 6;
   Serial.println("Reiniciando");
-  WiFi.disconnect();
+  WiFi.disconnect(); /*desconecta da rede wifi*/
   while (i-- > 0) {
     Serial.println(".");
     delay(500);
@@ -149,13 +149,13 @@ void boardUpdate(char *json) {
   StaticJsonBuffer<200> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(json);
 
-  // Test if parsing succeeds.
-  if (!root.success()) {
-    //Serial.println("parseObject() failed"); //Manda pela serial falha no parse Json
+  /* Testa se o parsing foi bem sucedido.*/
+  if (!root.success()) { /*se nao for bem-sucedido então...*/
+    //Serial.println("parseObject() failed"); /* Manda pela serial falha no parse Json */
     return;
   }
 
-  if (root.containsKey("led")) {
+  if (root.containsKey("led")) { /* Se contem led verifica*/
     int valueLed = atoi(root["led"]);
     if (valueLed < 0) {
       boardState.lamp[0].parallel.bits.isWebON = !boardState.lamp[0].parallel.bits.isWebON;
@@ -227,21 +227,21 @@ void boardUpdate(char *json) {
   }
 }
 
-void printIPCONFIG(void)
+void printIPCONFIG(void) /* Mostra as configuracoes de rede abaixo*/
 {
   uint8_t MAC_array[6];
   char MAC_char[19] = "";
   int myID = ESP.getChipId();
-  IPAddress myIP;
-  myIP = WiFi.localIP();
+  IPAddress myIP;  /* Cria um objeto do tipo IPAddress */
+  myIP = WiFi.localIP(); /*Atribui ao objeto myIP o IP atual da placa*/
   
   Serial.println ( "Conectando a " + ssid  + " ..." );
   Serial.println("psk:  '" + password + "'");
   Serial.println("name:  '" + boardState.name + "'");
   Serial.print ( "IP address: " );
-  Serial.println ( myIP );
+  Serial.println ( myIP );   /*imprime o IP da placa*/
   Serial.print ( "Chip ID: " );
-  Serial.println ( myID );
+  Serial.println ( myID );  /*imprime o ID da placa*/
     
   WiFi.macAddress(MAC_array);
     for (int i = 0; i < sizeof(MAC_array); ++i) {
@@ -253,7 +253,7 @@ void printIPCONFIG(void)
   Serial.println((boardState.isWiFiAP) ? "Modo STA Ativado" : "Modo AP ativado\n");
 }
 
-void printMQTTCONFIG(void)
+void printMQTTCONFIG(void) /*manda pela serial como esta configurado para funcionar a fila MQTT*/ 
 {
   int myID = ESP.getChipId();
   Serial.print ( "\nChip ID: " );
@@ -271,6 +271,7 @@ void printMQTTCONFIG(void)
       }
 }
 
+/* Pagina HTML da Placa minificar e colocar \" no luga de todos os \ */
 const char temp[] = "<!DOCTYPE HTML><html> <head> <title>POP-0</title> <style type=\"text/css\"> *{font-family: Arial;}.sensor{float: left; margin: 5px; padding: 12px; width: 300px; height: 330px; background-color: #30B0E0; box-shadow: 10px 10px 5px #888888; border: 2px solid black;}.middle{vertical-align: middle}.timer{float: left; margin: 5px; padding: 10px; width: 100px; height: 168px;}h1{line-height: 0.1; text-align: justify; color: white;}h2{line-height: 0.1; color: white; padding: 0px; font-weight: bold;}p{color: white;}body{padding: 0; margin: 0; background-color: #3FBFEF;}header{position: fixed; top: 0; width: 100%; height: 30px; background-color: #333; padding: 10px;}label{display: inline-block;float: left;clear: left;width: 130px;text-align: left;}input{display: inline-block;float: left;}footer{background-color: #333; width: 100%; bottom: 0; position: relative;}.tooltip{position: relative; display: inline-block;}.tooltip .tooltiptext{visibility: hidden; width: 120px; background-color: black; color: #fff; text-align: center; border-radius: 6px; padding: 5px 0; position: absolute; z-index: 1; bottom: 150%; left: 50%; margin-left: -60px; opacity: 0; transition: opacity 2s;}.tooltip .tooltiptext::after{content: \"\"; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: black transparent transparent transparent;}.tooltip:hover .tooltiptext{visibility: visible;opacity: 1;}.wrapper{text-align: center;}.buttonSubmit{background-color: #256799; border: none; color: white; width: 100px; font-size: 20px; margin: 4px 2px; cursor: pointer; border-radius: 10px; box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);}.buttonConfigurar{background-color: #e65c00; border: none; color: white; cursor: pointer; border-radius: 6px; box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);}.buttonSubmit:hover{opacity: 0.6;}.buttonSubmit:active{background-color: #444444; box-shadow: 0 2px #666; transform: translateY(4px);}#main{padding-top: 50px; text-align: center;}.buttonON{background-color: #4CAF50; border: none; color: white; width: 100px; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 20px; margin: 4px 2px; cursor: pointer; border-radius: 12px; box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);}.buttonOFF{background-color: #F44336; border: none; color: white; width: 100px; padding: 15px 32px; text-align: center; text-decoration: none; display: inline-block; font-size: 20px; margin: 4px 2px; cursor: pointer; border-radius: 12px; box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);}.buttonON:hover{background-color: #3e8e41}.buttonON:active{background-color: #3e8e41; box-shadow: 0 2px #666; transform: translateY(4px);}.buttonOFF:hover{background-color: #D53520}.buttonOFF:active{background-color: #F44336; box-shadow: 0 2px #666; transform: translateY(4px);}.onoffswitch{position: relative; width: 130px; white-space: nowrap; float: left;}.mqttswitch{position: relative; width: 130px; white-space: nowrap; float: left;}.onoffswitch-checkbox{display: none;}.mqttswitch-checkbox{display: none;}.onoffswitch-label{display: block; overflow: hidden; cursor: pointer; border: 2px solid #999999; border-radius: 20px;}.mqttswitch-label{display: block; overflow: hidden; cursor: pointer; border: 2px solid #999999; border-radius: 20px;}.onoffswitch-inner{display: block; width: 200%; margin-left: -100%; transition: margin 0.3s ease-in 0s;}.mqttswitch-inner{display: block; width: 200%; margin-left: -100%; transition: margin 0.3s ease-in 0s;}.onoffswitch-inner:before, .onoffswitch-inner:after{display: block; float: left; width: 50%; height: 30px; padding: 0; line-height: 30px; font-size: 14px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold; box-sizing: border-box;}.mqttswitch-inner:before, .mqttswitch-inner:after{display: block; float: left; width: 50%; height: 30px; padding: 0; line-height: 30px; font-size: 14px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold; box-sizing: border-box;}.onoffswitch-inner:before{content: \"Criar Rede\"; padding-left: 10px; background-color: #256799; color: #FFFFFF;}.mqttswitch-inner:before{content: \"Ligado\"; padding-left: 10px; background-color: #256799; color: #FFFFFF;}.onoffswitch-inner:after{content: \"Conectar em\"; padding-right: 10px; background-color: #256799; color: #EEEEEE; text-align: right;}.mqttswitch-inner:after{content: \"Desligado\"; padding-right: 10px; background-color: #256799; color: #DDDDDD; text-align: right;}.onoffswitch-switch{display: block; width: 18px; margin: 6px; background: #03FC0F; position: absolute; top: 0; bottom: 0; right: 96px; border: 2px solid #999999; border-radius: 18px; transition: all 0.3s ease-in 0s;}.mqttswitch-switch{display: block; width: 18px; margin: 6px; background: #AD002E; position: absolute; top: 0; bottom: 0; right: 96px; border: 2px solid #999999; border-radius: 18px; transition: all 0.3s ease-in 0s;}.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner{margin-left: 0;}.mqttswitch-checkbox:checked + .mqttswitch-label .mqttswitch-inner{margin-left: 0;}.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch{right: 0px;}.mqttswitch-checkbox:checked + .mqttswitch-label .mqttswitch-switch{right: 0px; background-color: #03FC0F;}</style> <script type=\"text/javascript\">var updateConfig=true; var xmlHttp=createXmlHttpObject(); var escondeDiv=1; function checkMQTT(){if (document.getElementById(\"USEMQTT\").checked==false){document.getElementById(\"IPMQTT\").disabled=true; document.getElementById(\"USUARIOMQTT\").disabled=true; document.getElementById(\"SENHAMQTT\").disabled=true; document.getElementById(\"TOPICMQTT\").disabled=true;}else{document.getElementById(\"IPMQTT\").disabled=false; document.getElementById(\"USUARIOMQTT\").disabled=false; document.getElementById(\"SENHAMQTT\").disabled=false; document.getElementById(\"TOPICMQTT\").disabled=false;}}function boardSendData(params, fn){var request=createXmlHttpObject(); request.onreadystatechange=fn; request.open('POST', 'update', true); request.setRequestHeader(\"Content-type\", \"application/x-www-form-urlencoded\"); request.setRequestHeader(\"Content-length\", params.length); request.setRequestHeader(\"Connection\", \"close\"); request.send(params); if(fn !=null){fn();}}function ValidateIPaddress(ip){var x=ip.split(\".\"), x1, x2, x3, x4; if (x.length==4){x1=parseInt(x[0], 10); x2=parseInt(x[1], 10); x3=parseInt(x[2], 10); x4=parseInt(x[3], 10); if (isNaN(x1) || isNaN(x2) || isNaN(x3) || isNaN(x4)){return false;}if ((x1 >=0 && x1 <=255) && (x2 >=0 && x2 <=255) && (x3 >=0 && x3 <=255) && (x4 >=0 && x4 <=255)){return true;}}return false;}function setBoardNetwork(){var ip=document.getElementById(\"IPMQTT\").value; var mqttEnable=document.getElementById(\"USEMQTT\").checked ? 1 : 0; var apmode=document.getElementById(\"apmode\").checked ? 1 : 0; var ipOK=(mqttEnable !=0) ? ValidateIPaddress(ip) : true; if(ipOK){var ssid=document.getElementById(\"redewifi\"); var senha=document.getElementById(\"senhawifi\"); var senha2=document.getElementById(\"senhawifi2\"); if(senha.value.length < 8){alert(\"Senha deve ter pelo menos 8 caracteres!\");}else if(senha.value !=senha2.value){alert(\"Senha incorreta!\");}else{var networkConfig=\"json={\\\"name\\\":\\\"\"; networkConfig +=document.getElementById(\"nameboard\").value; networkConfig +=\"\\\",\\\"wifi\\\":{\"; networkConfig +=\"\\\"ssid\\\":\\\"\" + ssid.value; networkConfig +=\"\\\",\\\"password\\\":\\\"\" + senha.value; networkConfig +=\"\\\",\\\"apmode\\\":\" + apmode; networkConfig +=\"},\\\"mqtt\\\":{\\\"enable\\\":\" + mqttEnable; networkConfig +=\",\\\"ip\\\":\\\"\" + ip; networkConfig +=\"\\\",\\\"user\\\":\\\"\" + document.getElementById(\"USUARIOMQTT\").value; networkConfig +=\"\\\",\\\"password\\\":\\\"\" + document.getElementById(\"SENHAMQTT\").value; networkConfig +=\"\\\",\\\"topic\\\":\\\"\" + document.getElementById(\"TOPICMQTT\").value; networkConfig +=\"\\\"}}\"; boardSendData(networkConfig, function(){if (xmlHttp.readyState==4){alert(\"Configuracao atualizada!\"); updateConfig=true;}});}}else{alert(\"IP incorreto: \" + ip);}}function boardSetTimer(tag){var params; var txt=document.getElementById(\"timer\" + tag); if(txt.value >=0){params=\"json={\\\"\" + tag + \"\\\":\" + (txt.value * 60) + \"}\"; boardSendData(params, null);}txt.value=\"0\";}function mudaBotao(nome){boardSendData(\"json={\\\"led\\\":-1}\", null);}function createXmlHttpObject(){if (window.XMLHttpRequest){xmlHttp=new XMLHttpRequest();}else{xmlHttp=new ActiveXObject('Microsoft.XMLHTTP');}return xmlHttp;}function boardProcess(){if (xmlHttp.readyState==0 || xmlHttp.readyState==4){xmlHttp.open('PUT', 'json', true); xmlHttp.onreadystatechange=handleServerResponse; xmlHttp.send(null);}setTimeout('boardProcess()', 1000);}function boardInit(){checkMQTT(); boardProcess();}function handleServerResponse(){var color=['white', 'yellow']; if (xmlHttp.readyState==4 && xmlHttp.status==200){var jObject=JSON.parse(xmlHttp.responseText); if(updateConfig){updateConfig=false; document.getElementById('apmode' ).checked=jObject.board.apmode; document.getElementById('nameboard' ).value=jObject.board.name; document.getElementById('USEMQTT' ).checked=jObject.mqtt.enable; document.getElementById('IPMQTT' ).value=jObject.mqtt.servidor; document.getElementById('USUARIOMQTT' ).value=jObject.mqtt.usuario; document.getElementById('redewifi' ).value=jObject.board.network; document.getElementById('TOPICMQTT' ).value=jObject.mqtt.topic; checkMQTT();}document.getElementById('sala_circle' ).style.fill=color[jObject.led]; if(jObject.tmrON > 0){var secs=(jObject.tmrON%60); if(secs < 10){secs=\"0\" + secs;}var textRemaining=Math.floor(jObject.tmrON/60) + \":\" + secs; document.getElementById('remainingTimerON').innerHTML=textRemaining; document.getElementById('showTimerON').style.display='inline'; document.getElementById('setTimerON' ).style.display='none'; document.getElementById('svgTimerON' ).style.fill='red';}else{document.getElementById('showTimerON').style.display='none'; document.getElementById('setTimerON' ).style.display='inline'; document.getElementById('svgTimerON' ).style.fill='black';}if(jObject.tmrOFF > 0){var secs=(jObject.tmrOFF%60); if(secs < 10){secs=\"0\" + secs;}var textRemaining=Math.floor(jObject.tmrOFF/60) + \":\" + secs; document.getElementById('remainingTimerOFF').innerHTML=textRemaining; document.getElementById('showTimerOFF').style.display='inline'; document.getElementById('setTimerOFF' ).style.display='none'; document.getElementById('svgTimerOFF' ).style.fill='red';}else{document.getElementById('showTimerOFF').style.display='none'; document.getElementById('setTimerOFF' ).style.display='inline'; document.getElementById('svgTimerOFF' ).style.fill='black';}var botao=document.getElementById('sala'); if (jObject.led !=0){botao.value=\"OFF\"; botao.className=\"buttonOFF\";}else{botao.value=\"ON\"; botao.className=\"buttonON\";}}}function esconde_div(){if(escondeDiv==1){document.getElementById('config').style.display=\"block\"; document.getElementById('configura').value=\"Ocultar\"; escondeDiv=0;}else{document.getElementById('config').style.display=\"none\"; document.getElementById('configura').value='Configurar'; escondeDiv=1;}}</script> </head> <body onload='boardInit()'> <h1>&nbsp;Modelo<b>-i1</b></h1> <div class=\"sensor\"> <h1><b>Lampada</b></h1> <div> <input id='sala' type=\"button\" class=\"buttonON\" value=\"ON\" onclick=\"mudaBotao('sala')\" style=\"vertical-align:top;\"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <svg height=\"66\" width=\"66\"> <circle id=\"sala_circle\" cx=\"33\" cy=\"33\" r=\"30\" stroke=\"black\" stroke-width=\"3\" fill=\"yellow\"/> </svg> </div><div class='timer'> <svg id=\"svgTimerON\" height=\"66\" width=\"76\" fill=\"black\" enable-background=\"new 0 0 87.506 100\" viewBox=\"0 0 87.506 100\" xml:space=\"preserve\" xmlns=\"http://www.w3.org/2000/svg\"> <path d=\"m43,26c-1.656,0-3,1.343-3,3v28c0,1.657 1.344,3 3,3s3-1.343 3-3v-28c0-1.657-1.344-3-3-3z\"></path> <path d=\"m87.506,23.807c0,0-1.414-4.242-4.243-7.07s-7.07-4.243-7.07-4.243l-8.988,8.988c-4.797-3.28-10.289-5.606-16.205-6.724v-12.758c0,0-4-2-8-2s-8,2-8,2v12.758c-19.898,3.762-35,21.266-35,42.242 0,23.71 19.29,43 43,43s43-19.29 43-43c0-8.971-2.765-17.305-7.482-24.205l8.988-8.988zm-44.506,70.193c-20.402, 0-37-16.598-37-37s16.598-37 37-37 37,16.598 37,37-16.598,37-37,37z\"></path> </svg><br/> <div id='setTimerON'>Ligar em<br/> <input id='timeron' type=\"text\" name=\"led\" value=\"\" maxlength=\"4\" size='9'/> <br/>minutos<br/> <input class=\"buttonSubmit\" type=\"submit\" value=\"Aplicar\" onclick=\"boardSetTimer('on')\"/></div><div id='showTimerON' style=\"display:none\">Liga em<br/> <a id='remainingTimerON'></a> <br/>minutos<br/> <input class=\"buttonSubmit\" type=\"submit\" value=\"Cancelar\" onclick=\"boardSetTimer('on')\"/></div></div><div class='timer'> <svg id=\"svgTimerOFF\" height=\"66\" width=\"76\" fill=\"black\" enable-background=\"new 0 0 87.506 100\" viewBox=\"0 0 87.506 100\" xml:space=\"preserve\" xmlns=\"http://www.w3.org/2000/svg\"> <path d=\"m43,26c-1.656,0-3,1.343-3,3v28c0,1.657 1.344,3 3,3s3-1.343 3-3v-28c0-1.657-1.344-3-3-3z\"></path> <path d=\"m87.506,23.807c0,0-1.414-4.242-4.243-7.07s-7.07-4.243-7.07-4.243l-8.988,8.988c-4.797-3.28-10.289-5.606-16.205-6.724v-12.758c0,0-4-2-8-2s-8,2-8,2v12.758c-19.898,3.762-35,21.266-35,42.242 0,23.71 19.29,43 43,43s43-19.29 43-43c0-8.971-2.765-17.305-7.482-24.205l8.988-8.988zm-44.506,70.193c-20.402, 0-37-16.598-37-37s16.598-37 37-37 37,16.598 37,37-16.598,37-37,37z\"></path> </svg><br/> <div id='setTimerOFF'>Desligar em<br/> <input id='timeroff' type=\"text\" name=\"led\" value=\"\" maxlength=\"4\" size='9'/> <br/>minutos<br/> <input class=\"buttonSubmit\" type=\"submit\" value=\"Aplicar\" onclick=\"boardSetTimer('off')\"/></div><div id='showTimerOFF' style=\"display:none\">Desliga em<br/> <a id='remainingTimerOFF'></a> <br/>minutos<br/> <input class=\"buttonSubmit\" type=\"submit\" value=\"Cancelar\" onclick=\"boardSetTimer('off')\"/></div></div><div><input class=\"buttonConfigurar\" id=\"configura\" type=\"submit\" value=\"Configurar\" onclick=\"esconde_div()\"/></div></div><div id='config' class=\"sensor\" style=\"display:none\"> <label><h2>Wi-FI:</h2> </label> <div class=\"onoffswitch\"> <input type=\"checkbox\" name=\"onoffswitch\" class=\"onoffswitch-checkbox\" id=\"apmode\" checked> <label class=\"onoffswitch-label\" for=\"apmode\"> <span class=\"onoffswitch-inner\"></span> <span class=\"onoffswitch-switch\"></span> </label> </div><br/> <label class=\"tooltip\">Rede Wi-FI:<span class=\"tooltiptext\">Nome da Rede</span></label> <input type=\"text\" id=\"redewifi\" value=\"\" maxlength=\"12\" autocomplete=\"off\" size='15'/> <br/> <label>Senha:</label> <input type=\"password\" id=\"senhawifi\" value=\"\" maxlength=\"12\" autocomplete=\"off\" size='15'/> <br/> <label>Confirmar Senha:</label><input type=\"password\" id=\"senhawifi2\" value=\"\" maxlength=\"12\" autocomplete=\"off\" size='15'/> <br/> <label class=\"tooltip\">Nome da Placa :<span class=\"tooltiptext\">Nome dela na rede</span></label> <input type=\"text\" id=\"nameboard\" value=\"Lampada\" maxlength=\"12\" autocomplete=\"off\" size='15'/> <br/> <br/> <br/><label><b>Monitoramento&#x3F;</b></label> <div class=\"mqttswitch\"> <input type=\"checkbox\" name=\"mqttswitch\" class=\"mqttswitch-checkbox\" id=\"USEMQTT\" onclick=\"checkMQTT()\"/> <label class=\"mqttswitch-label\" for=\"USEMQTT\"> <span class=\"mqttswitch-inner\"></span> <span class=\"mqttswitch-switch\"></span> </label> </div><br/> <br/> <label>Usu&aacute;rio:</label> <input type=\"text\" id=\"USUARIOMQTT\" value=\"admin\" maxlength=\"12\" autocomplete=\"off\" size='15'/> <br/> <label class=\"tooltip\">IP do Servidor:<span class=\"tooltiptext\">Porta 8161</span></label> <input type=\"text\" id=\"IPMQTT\" value=\"192.168.0.95\" maxlength=\"15\" autocomplete=\"off\" size='15'/> <br/> <label>Senha:</label> <input type=\"password\" id=\"SENHAMQTT\" value=\"\" maxlength=\"12\" autocomplete=\"off\" size='15'/> <br/> <label>T&oacute;pico:</label> <input type=\"text\" id=\"TOPICMQTT\" value=\"\" maxlength=\"12\" autocomplete=\"off\" size='15'/> <br/> <br/> <div class='wrapper'><button class=\"buttonSubmit\" id=\"APLICAR_MQTT\" onclick=\"setBoardNetwork()\">Salvar</button></div></div></body></html>";
 
 void handleRoot() {
@@ -566,7 +567,7 @@ void setup ( void ) {
   if (!SPIFFS.begin()) {
     Serial.println("Failed to mount file system");
   } else {
-    // Load wifi connection information.
+    /* Carrega as informacoes da conexao wifi.*/
     if (!loadConfig(&ssid, &password)) {
       Serial.println("Load config from flash FAILED.");
 
@@ -586,7 +587,7 @@ void setup ( void ) {
   }
 }
 
-void loopNetwork() {
+void loopNetwork() {  /* Configuracao do boot da placa*/ 
   IPAddress myIP;
   static bool isFirstConnection = true, forceWiFiAP = false;
 
@@ -605,7 +606,7 @@ void loopNetwork() {
         Serial.println ( myIP );
 
 
-        client.setServer(boardState.mqtt.ip.c_str(), 1883);  
+        client.setServer(boardState.mqtt.ip.c_str(), 1883);   
         client.setCallback(mqttCallback);
 
         timeout = 0;
@@ -617,7 +618,7 @@ void loopNetwork() {
       Serial.println ( "Conectando a " + ssid  + " ..." );
     } else if(millis() > timeout) {
       forceWiFiAP = true;
-      WiFi.disconnect();
+      WiFi.disconnect(); /*Desconecta da rede Wifi*/
     }
   }
 
