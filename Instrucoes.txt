@@ -63,12 +63,9 @@
 3) Instalando bibliotecas
 - Entre pelo prompt no modo root em: "C:\Program Files\nodejs"
 - npm install -g node-red-contrib-bigtimer
-- npm install -g thethingbox-node-timestamp
-- npm install -g https://github.com/altamira/node-red-contrib-modbustcp
-- npm install -g node-red-contrib-file-function
-- npm install -g node-red-contrib-schedex
-- npm install -g node-red-node-timeswitch
-- npm install -g node-red-contrib-time-range-switch
+- npm install node-red-contrib-modbustcp-no-pooling -g
+- npm install node-red-contrib-xml-validate -g
+- npm install node-red-contrib-mail-parse -g
 - Restart node-red
 
 4) Configurando para iniciar no Boot 
@@ -104,3 +101,30 @@ Quando ele for alterado, os passos a seguir devem ser executados:
 - Excluir a string carregada (Site antigo, apaga tudo até o final da linha)
 - Deve ser mantido apenas as aspas que delimitam a string e o ; do final: const char temp[] = "";
 - Colar o texto gerado no passo anterior entre as aspas
+
+===============================================================
+Instruções - Como instalar e configurar "MongoDB"
+===============================================================
+
+- Como administrador "ROOT" entrar no prompt de commando "CMD"
+- Create directories for your database and log files:
+	mkdir c:\data\db
+	mkdir c:\data\log
+- Criar o arquivo mongodb.cfg no diretorio c:\data contendo:
+	systemLog:
+	    destination: file
+	    path: c:\data\log\mongod.log
+	storage:
+	    dbPath: c:\data\db
+- Install the MongoDB service you most to execute this command.
+	"C:\mongodb\bin\mongod.exe" --config "C:\data\mongod.cfg" --install
+- Start o mongoDB
+	net start MongoDB
+
+Criando um banco de dados MongoDB
+cd 'C:\Program Files\MongoDB\Server\3.2\bin'
+mongo.exe
+connecting to: test
+use node-red //Cria banco db node-red
+db.createCollection('paramentros') //cria tabela parametros
+de tudo correr bem aparece {"ok":1}
